@@ -56,10 +56,10 @@ class adam:
 
 
 class meta_sgd:
-        def __init__(self,alpha,beta,gamma):
+        def __init__(self,alpha,beta=0.1,gamma=0.0001):
                 self.gamma   = gamma
 		self.alpha   = alpha
-		self.beta    = beta
+		self.beta    = alpha
         def apply(self,loss_or_grads,variables):
                 self.gradl   = dict()
                 self.gradll  = dict()
@@ -72,8 +72,8 @@ class meta_sgd:
                 else:
                         gradients = tf.gradients(loss_or_grads,variables)
                 for g,v in zip(gradients,variables):
-			self.alphas[v] = tf.Variable(self.alpha*tf.ones(tf.shape(v.initial_value)), 'alphas')
-                        self.betas[v]  = tf.Variable(self.beta*tf.ones(tf.shape(v.initial_value)), 'betas')
+			self.alphas[v] = tf.Variable(tf.fill(tf.shape(v.initial_value),self.alpha), 'alphas')
+                        self.betas[v]  = tf.Variable(tf.fill(tf.shape(v.initial_value),self.beta), 'betas')
                         self.gradl[v]  = tf.Variable(tf.zeros(tf.shape(v.initial_value)), 'm')
                         self.gradll[v] = tf.Variable(tf.zeros(tf.shape(v.initial_value)), 'u')
 			updates[self.betas[v]]  = self.betas[v].assign_sub(self.gamma*g*self.gradl[v]**2*self.gradll[v])
@@ -87,6 +87,21 @@ class meta_sgd:
                 return tf.group(*final)
 
 
+class sgd:
+        def __init__(self,alpha):
+                self.alpha   = alpha
+        def apply(self,loss_or_grads,variables):
+                updates      = dict()
+                # If loss generate the gradients else setup the gradients
+                if(isinstance(loss_or_grads,list)):
+                        gradients = loss_or_grads
+                else:
+                        gradients = tf.gradients(loss_or_grads,variables)
+                for g,v in zip(gradients,variables):
+                        updates[v]              = v.assign_sub(self.alpha*g)
+                print tf.get_collection(tf.GraphKeys.UPDATE_OPS)
+                final = tf.get_collection(tf.GraphKeys.UPDATE_OPS)+updates.values()
+                return tf.group(*final)
 
 
 

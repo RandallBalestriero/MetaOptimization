@@ -19,7 +19,7 @@ class DNNClassifier(object):
 		self.lr = lr
 		with tf.device('/device:GPU:'+str(n)):
 			self.learning_rate = tf.placeholder(tf.float32,name='learning_rate')
-			optimizer = optimizer(self.learning_rate)
+			optimizer          = optimizer(self.lr)
         		self.x             = tf.placeholder(tf.float32, shape=input_shape,name='x')
         	        self.y_            = tf.placeholder(tf.int32, shape=[batch_size],name='y')
                         self.template_i    = tf.placeholder(tf.int32,name='teplatei')
@@ -54,11 +54,11 @@ class DNNClassifier(object):
 			else:
 				here = [random.sample(k,self.batch_size/self.c) for k in indices]
 			here = concatenate(here)
-                        self.session.run(self.apply_updates,feed_dict={self.x:X[here],self.y_:y[here],self.test_phase:True,self.learning_rate:float32(self.lr)})#float32(self.lr/sqrt(self.e))})
-		        if(i%100 ==0):
-                            print i,n_train
+                        self.session.run(self.apply_updates,feed_dict={self.x:X[here],self.y_:y[here],self.test_phase:True})#,self.learning_rate:float32(self.lr)})#float32(self.lr/sqrt(self.e))})
 			if(i%update_time==0):
                                 train_loss.append(self.session.run(self.loss,feed_dict={self.x:X[here],self.y_:y[here],self.test_phase:True}))
+	                        print i,n_train,train_loss[-1]
+
         	return train_loss
         def fit(self,X,y,X_test,y_test,n_epochs=5):
 		train_loss = []

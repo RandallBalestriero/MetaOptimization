@@ -55,6 +55,23 @@ def load_svhn():
 
 
 
+def unpickle100(file,labels,channels):
+    fo = open(file, 'rb')
+    dict = cPickle.load(fo)
+    fo.close()
+    if(channels==1):
+        p=dict['data'][:,:1024]*0.299+dict['data'][:,1024:2048]*0.587+dict['data'][:,2048:]*0.114
+        p = p.reshape((-1,1,32,32))#dict['data'].reshape((-1,3,32,32))
+    else:
+        p=dict['data']
+        p = p.reshape((-1,channels,32,32)).astype('float64')#dict['data'].reshape((-1,3,32,32))
+    if(labels == 0 ):
+        return p
+    else:
+        return asarray(p),asarray(dict['fine_labels'])
+
+
+
 def unpickle(file,labels,channels):
     fo = open(file, 'rb')
     dict = cPickle.load(fo)
@@ -62,15 +79,13 @@ def unpickle(file,labels,channels):
     if(channels==1):
         p=dict['data'][:,:1024]*0.299+dict['data'][:,1024:2048]*0.587+dict['data'][:,2048:]*0.114
         p = p.reshape((-1,1,32,32))#dict['data'].reshape((-1,3,32,32))
-        p-=p.mean(0)
     else:
         p=dict['data']
         p = p.reshape((-1,channels,32,32)).astype('float64')#dict['data'].reshape((-1,3,32,32))
-        p-=p.mean(0)
     if(labels == 0 ):
         return p
     else:
-        return asarray(p),asarray(dict['fine_labels'])
+        return asarray(p),asarray(dict['labels'])
 
 
 
@@ -101,10 +116,10 @@ def load_cifar(channels=1):
 
 def load_cifar100(channels=1):
         path = '../../DATASET/cifar-100-python/'
-        PP = unpickle(path+'train',1,channels)
+        PP = unpickle100(path+'train',1,channels)
         x_train = PP[0]
         y_train = PP[1]
-        PP = unpickle(path+'test',1,channels)
+        PP = unpickle100(path+'test',1,channels)
         x_test = PP[0]
         y_test = PP[1]
         return [x_train,y_train],[x_test,y_test]
